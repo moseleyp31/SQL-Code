@@ -1,0 +1,27 @@
+--This code will search the designated @columnname for each ASCII character and
+--	show the results in separate queries for each character code.
+--	To see a table of ASCII character codes you can go to http://www.asciitable.com/
+
+--	Substitute the @tablename variable for the table you wish to search
+--	Substitute the @columnname variable for the column in the table you wish to search
+
+
+DECLARE @tablename VARCHAR(1000) ='dbo.PolicyTransactions'
+DECLARE @columnname VARCHAR(100)='InsuredName'
+DECLARE @counter INT = 0
+DECLARE @sql VARCHAR(MAX)
+
+WHILE @counter <=255
+BEGIN
+
+SET @sql=
+
+'SELECT TOP 100 '+@columnname+','+CAST(@counter AS VARCHAR(3))+' as CharacterSet, 
+CHARINDEX(CHAR('+CAST(@counter AS VARCHAR(3))+'),'+@columnname+') as LocationOfChar
+ FROM '+@tablename+'
+ WHERE CHARINDEX(CHAR('+CAST(@counter AS VARCHAR(3))+'),'+@columnname+') <> 0'
+
+PRINT (@sql)
+EXEC (@sql)
+SET @counter = @counter + 1
+END
