@@ -1,0 +1,7 @@
+/*
+You can use a combination of Substring and Charindex to pull out portions of a  data value that you want.
+Use CHARINDEX to determine the starting point if you have field values that have a common symbol or string delimitter in them, such as a colon, semi-colon, pipe symbol, etc..
+*/
+
+--Example
+SUBSTRING(field reference/expression , CHARINDEX('character', field reference/expression,  1) + 1, Length)
