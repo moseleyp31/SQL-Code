@@ -1,0 +1,81 @@
+IF OBJECT_ID('tempdb..#Results') IS NOT NULL DROP TABLE #Results
+DECLARE
+@tablename VARCHAR(1000) ='dbo.ClaimsHistory'
+,@columnname VARCHAR(100)='[Claimant Last Name   Business Name]'
+--,@columnname VARCHAR(100)='ClmtCity'
+,@counter INT = 0
+,@sql VARCHAR(MAX)
+
+
+CREATE TABLE #Results
+(ColumnName VARCHAR(100) NULL
+,CharacterSet VARCHAR(10) NULL
+,LocationOfChar VARCHAR(100) NULL
+)
+WHILE @counter <=255
+BEGIN
+SET @sql = 'SELECT TOP 100 '+@columnname+','+CAST(@counter AS VARCHAR(3))+' as CharacterSet, 
+				CHARINDEX(CHAR('+CAST(@counter AS VARCHAR(3))+'),'+@columnname+') as LocationOfChar
+				FROM '+@tablename+'
+				WHERE CHARINDEX(CHAR('+CAST(@counter AS VARCHAR(3))+'),'+@columnname+') <> 0'
+PRINT (@sql)
+INSERT INTO #results
+EXEC (@sql)
+SET @counter = @counter + 1
+END
+SELECT
+ColumnName
+,CharacterSet
+,LocationOfChar
+FROM #Results
+--WHERE CharacterSet = '160'	--Can be used to find a specific ASCII character in the results
+GROUP BY
+ColumnName
+,CharacterSet
+,LocationOfChar
+
+
+/***********************/
+
+DECLARE @Claim# VARCHAR(50) = '3401329'
+
+/*	RECORDS BEFORE UPDATE	*/
+SELECT
+@Claim# AS Claim#
+,COUNT(*) AS TotalRecordCountOfClaim_BeforeUpdate
+FROM dbo.BTU_INTL_CLMS_ClaimsSource
+WHERE Claim# = @Claim#
+
+SELECT DISTINCT
+@Claim# AS Claim#
+,[Claimant Last Name   Business Name] AS CurrentValueOfClaimantLastNameBusinessName
+,REPLACE([Claimant Last Name   Business Name], CHAR(160), 'ASCII_Hidden_Character_Found') AS ASCIITest
+,COUNT(*) AS NumOfRecordsWithIssue_BeforeUpdate
+FROM dbo.BTU_INTL_CLMS_ClaimsSource
+WHERE Claim# = @Claim#
+GROUP BY
+[Claimant Last Name   Business Name]
+
+UPDATE BTU_GLUpload.dbo.BTU_INTL_CLMS_ClaimsSource
+SET [Claimant Last Name   Business Name] = REPLACE([Claimant Last Name   Business Name], CHAR(160), '')
+FROM dbo.BTU_INTL_CLMS_ClaimsSource
+WHERE Claim# = @Claim#
+
+
+/*	RECORDS AFTER UPDATE	*/
+SELECT
+@Claim# AS Claim#
+,COUNT(*) AS TotalRecordCountOfClaim_AfterUpdate
+FROM dbo.BTU_INTL_CLMS_ClaimsSource
+WHERE Claim# = @Claim#
+
+SELECT DISTINCT
+@Claim# AS Claim#
+,[Claimant Last Name   Business Name] AS CurrentValueOfClaimantLastNameBusinessName
+,REPLACE([Claimant Last Name   Business Name], CHAR(160), 'ASCII_Hidden_Character_Found') AS ASCIITest
+,COUNT(*) AS NumOfRecordsWithIssue_AfterUpdate
+FROM dbo.BTU_INTL_CLMS_ClaimsSource
+WHERE Claim# = @Claim#
+GROUP BY
+[Claimant Last Name   Business Name]
+
